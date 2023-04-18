@@ -1,0 +1,53 @@
+@use "sass:meta";
+
+:not(#fake-id) .block-language-render-diff {
+	@include meta.load-css("diff2html.min.css");
+
+	/* Reset Obsidian's styles */
+
+	ol {
+		padding-inline-start: unset;
+	}
+
+	table {
+		margin-block-start: unset;
+		margin-block-end: unset;
+	}
+
+	td {
+		padding: unset;
+		border: unset;
+	}
+
+	.d2h-diff-table {
+		font-family: "iosevka expanded" var(--font-monospace);
+	}
+
+	/* Add soft wraps */
+
+	.d2h-code-line-ctn {
+		white-space: pre-wrap;
+	}
+
+	.d2h-code-line, .d2h-code-side-line, .d2h-code-line-ctn {
+		width: revert;
+	}
+
+	.d2h-code-line-prefix {
+		vertical-align: top;
+		color: rgba(0, 0, 0, 0.3);
+	}
+
+	.d2h-code-linenumber {
+		border-left-width: 0;
+	}
+
+	.d2h-code-line {
+		padding-right: 1em;
+		padding-left: 1em;
+	}
+
+	.d2h-code-linenumber {
+		display: none;
+	}
+}
