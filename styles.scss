@@ -1,10 +1,6 @@
 @use "sass:meta";
 
-:not(#fake-id) .block-language-render-diff {
-	@include meta.load-css("diff2html.min.css");
-
-	/* Reset Obsidian's styles */
-
+@mixin reset-obsidian-table-styles {
 	ol {
 		padding-inline-start: unset;
 	}
@@ -18,9 +14,16 @@
 		padding: unset;
 		border: unset;
 	}
+}
+
+:not(#fake-id) .block-language-render-diff {
+	@include meta.load-css("diff2html.min.css");
+	@include reset-obsidian-table-styles;
+
+	tab-size: 4;
 
 	.d2h-diff-table {
-		font-family: "iosevka expanded" var(--font-monospace);
+		font-family: var(--font-monospace);
 	}
 
 	/* Add soft wraps */
@@ -33,9 +36,9 @@
 		width: revert;
 	}
 
-	.d2h-code-line-prefix {
+	.d2h-code-line-prefix, .d2h-info .d2h-code-line {
 		vertical-align: top;
-		color: rgba(0, 0, 0, 0.3);
+		color: var(--text-faint);
 	}
 
 	.d2h-code-linenumber {
@@ -50,4 +53,86 @@
 	.d2h-code-linenumber {
 		display: none;
 	}
+
+	.d2h-file-header {
+		color: var(--text-muted);
+		background-color: var(--background-secondary);
+		// todo: duplication
+		border-bottom: var(--divider-width) solid var(--divider-color);
+		font-family: var(--font-interface);
+		border-radius: var(--radius-s) var(--radius-s) 0 0;
+	}
+
+	.d2h-info {
+		background-color: var(--background-secondary);
+	}
+
+	.d2h-code-line {
+		color: var(--text-normal);
+	}
+
+	.d2h-ins, .d2h-file-diff .d2h-ins.d2h-change {
+		background-color: rgba(var(--background-modifier-success-rgb), 0.2);
+		border-color: #13501381;
+	}
+
+	.d2h-del, .d2h-file-diff .d2h-del.d2h-change {
+		background-color: rgba(var(--background-modifier-error-rgb), 0.2);
+	}
+
+	.d2h-code-line ins {
+		background-color: rgba(var(--background-modifier-success-rgb), 0.4);
+	}
+
+	.d2h-code-line del {
+		background-color: rgba(var(--background-modifier-error-rgb), 0.4);
+	}
+
+	.d2h-code-line del, .d2h-code-line ins {
+		border-radius: 0;
+	}
+
+	.d2h-file-wrapper {
+		border: var(--divider-width) solid var(--divider-color);
+		border-radius: var(--radius-s) var(--radius-s) var(--radius-s) var(--radius-s)
+	}
+
+	.d2h-file-collapse {
+		border: none;
+
+		&:hover {
+			background-color: var(--background-modifier-hover);
+			border-radius: var(--clickable-icon-radius)
+		}
+	}
+
+	.d2h-tag {
+		display: none;
+	}
+
+	//.theme-dark & {
+	//	.d2h-code-line del,
+	//	.d2h-code-side-line del {
+	//		background-color: #8d232881;
+	//	}
+	//
+	//	.d2h-code-line ins,
+	//	.d2h-code-side-line ins {
+	//		background-color: #1d921996;
+	//		text-align: left;
+	//	}
+	//
+	//	.d2h-del {
+	//		background-color: #521b1d83;
+	//		border-color: #691d1d73;
+	//	}
+	//
+	//	.d2h-file-diff .d2h-del.d2h-change {
+	//		background-color: #55492480;
+	//	}
+	//
+	//	.d2h-file-diff .d2h-ins.d2h-change {
+	//		background-color: rgba(37, 78, 37, 0.418);
+	//	}
+	//}
 }

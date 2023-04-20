@@ -5,9 +5,10 @@ import {
 	Plugin,
 	PluginSettingTab,
 	Setting,
+	stringifyYaml,
 } from "obsidian";
-import { Diff2HtmlUI } from "diff2html/lib-esm/ui/js/diff2html-ui";
 import { simpleGit } from "simple-git";
+import { Diff2HtmlUI } from "diff2html/lib-esm/ui/js/diff2html-ui";
 
 interface RenderDiffSettings {
 	mySetting: string;
@@ -15,6 +16,14 @@ interface RenderDiffSettings {
 
 const DEFAULT_SETTINGS: RenderDiffSettings = {
 	mySetting: "default",
+};
+
+const DAILY_DIFF_CONFIG = {
+	dates: {
+		from: "2023-04-18",
+		to: "2023-04-19",
+	},
+	exclude: ".obsidian",
 };
 
 export default class RenderDiffPlugin extends Plugin {
@@ -25,19 +34,29 @@ export default class RenderDiffPlugin extends Plugin {
 
 		this.registerMarkdownCodeBlockProcessor(
 			"render-diff",
-			this.renderDiffProcessor
+			this.diffProcessor
 		);
+
+		this.addCommand({
+			id: "generate-diff-for-today",
+			name: "Generate diff for today",
+			editorCallback: (editor) => {
+				const yaml = stringifyYaml(DAILY_DIFF_CONFIG).trimEnd();
+				const block = `\`\`\`render-diff\n${yaml}\n\`\`\``;
+				editor.replaceSelection(block);
+			},
+		});
 	}
 
 	onunload() {}
 
-	renderDiffProcessor = async (source: string, el: HTMLDivElement) => {
+	diffProcessor = async (source: string, el: HTMLDivElement) => {
 		const config = parseYaml(source);
 		const { from, to } = config.dates || {};
 
 		const dateRange = `HEAD@{${from}}..HEAD@{${to}}`;
 
-		const { from: fromCommit, to: toCommit } = config.commits;
+		const { from: fromCommit, to: toCommit } = config.commits || {};
 
 		const commitRange = `${fromCommit}..${toCommit}`;
 
@@ -55,7 +74,6 @@ export default class RenderDiffPlugin extends Plugin {
 
 			new Diff2HtmlUI(el, response, {
 				stickyFileHeaders: false,
-				// todo: make an option
 				renderNothingWhenEmpty: true,
 			}).draw();
 		} catch (e) {
