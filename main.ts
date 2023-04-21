@@ -1,6 +1,7 @@
 import {
 	App,
 	FileSystemAdapter,
+	moment,
 	parseYaml,
 	Plugin,
 	PluginSettingTab,
@@ -19,13 +20,83 @@ const DEFAULT_SETTINGS: RenderDiffSettings = {
 	mySetting: "default",
 };
 
+function getDefaultFrom() {
+	return moment().subtract(1, "day").format("YYYY-MM-DD");
+}
+
+function getDefaultTo() {
+	return moment().format("YYYY-MM-DD");
+}
+
 const DAILY_DIFF_CONFIG = {
 	dates: {
-		from: "2023-04-18",
-		to: "2023-04-19",
+		from: getDefaultFrom(),
+		to: getDefaultTo(),
 	},
-	exclude: ".obsidian",
 };
+
+function createDailyDiffCodeBlock() {
+	const yaml = stringifyYaml(DAILY_DIFF_CONFIG).trimEnd();
+	return `\`\`\`render-diff\n${yaml}\n\`\`\``;
+}
+
+function getDateRange(from: string, to: string) {
+	return `HEAD@{${from}}..HEAD@{${to}}`;
+}
+
+function getDefaultDateRange() {
+	return getDateRange(getDefaultFrom(), getDefaultTo());
+}
+
+function getCommitRange(from: string, to: string) {
+	return `${from}..${to}`;
+}
+
+function excludePath(string: string) {
+	return `:(exclude)${string}`;
+}
+
+function createRangeArg(config: any) {
+	if (!config) {
+		return getDefaultDateRange();
+	}
+
+	const { commits, dates } = config;
+
+	if (commits) {
+		const { from, to } = commits;
+		if (!from) {
+			throw new Error("Commits must have a `from` and `to` property");
+		}
+
+		return getCommitRange(from, to);
+	}
+
+	if (dates) {
+		const { from, to = getDefaultTo() } = dates;
+		if (!from) {
+			throw new Error("Dates must have a `from` property");
+		}
+
+		return getDateRange(from, to);
+	}
+
+	return getDefaultDateRange();
+}
+
+function getExcludedPaths(config: any) {
+	if (!config) {
+		return excludePath(".obsidian");
+	}
+
+	const { exclude } = config;
+
+	if (Array.isArray(exclude)) {
+		exclude.map((path: string) => excludePath(path)).join(" ");
+	}
+
+	return excludePath(exclude);
+}
 
 export default class RenderDiffPlugin extends Plugin {
 	settings: RenderDiffSettings;
@@ -42,40 +113,36 @@ export default class RenderDiffPlugin extends Plugin {
 			id: "generate-diff-for-today",
 			name: "Generate diff for today",
 			editorCallback: (editor) => {
-				const yaml = stringifyYaml(DAILY_DIFF_CONFIG).trimEnd();
-				const block = `\`\`\`render-diff\n${yaml}\n\`\`\``;
-				editor.replaceSelection(block);
+				editor.replaceSelection(createDailyDiffCodeBlock());
 			},
 		});
 	}
 
 	onunload() {}
 
-	private getDiff() {}
+	private getBasePath() {
+		return (this.app.vault.adapter as FileSystemAdapter).getBasePath();
+	}
+
+	private getDiff(source: string) {
+		const config = parseYaml(source);
+
+		return simpleGit(this.getBasePath()).diff([
+			createRangeArg(config),
+			"--",
+			getExcludedPaths(config),
+		]);
+	}
 
 	diffProcessor = async (source: string, el: HTMLDivElement) => {
 		try {
-			const config = parseYaml(source);
-			const { from, to } = config.dates || {};
+			const diff = await this.getDiff(source);
 
-			const dateRange = `HEAD@{${from}}..HEAD@{${to}}`;
+			if (!diff.trim()) {
+				el.createEl("p", { text: "No changes" });
+			}
 
-			const { from: fromCommit, to: toCommit } = config.commits || {};
-
-			const commitRange = `${fromCommit}..${toCommit}`;
-
-			const baseDir = (
-				this.app.vault.adapter as FileSystemAdapter
-			).getBasePath();
-
-			const response = await simpleGit(baseDir).diff([
-				"--ignore-all-space",
-				config.dates ? dateRange : commitRange,
-				"--",
-				`:!${config.exclude}`,
-			]);
-
-			const parsedDiff = parse(response);
+			const parsedDiff = parse(diff);
 			const sanitizedHtml = sanitizeHTMLToDom(
 				html(parsedDiff, {
 					drawFileList: false,
@@ -89,7 +156,7 @@ export default class RenderDiffPlugin extends Plugin {
 			el.append(sanitizedHtml);
 		} catch (e) {
 			el.createEl("pre", {
-				text: `Error: ${e}`,
+				text: e,
 			});
 
 			throw e;
