@@ -1,4 +1,5 @@
 import { moment, stringifyYaml } from "obsidian";
+import { isNotUndefined, isString } from "typed-assert";
 
 function createDailyDiffConfig() {
 	return {
@@ -47,18 +48,15 @@ export function createRangeArg(config: any) {
 
 	if (commits) {
 		const { from, to } = commits;
-		if (!from) {
-			throw new Error("Commits must have a `from` and `to` property");
-		}
+		isString(from, "Commits must have a `from` string property");
+		isString(to, "Commits must have a `to` string property");
 
 		return getCommitRange(from, to);
 	}
 
 	if (dates) {
 		const { from, to = getDefaultTo() } = dates;
-		if (!from) {
-			throw new Error("Dates must have a `from` property");
-		}
+		isNotUndefined(from, "Dates must have a `from` property");
 
 		return getDateRange(from, to);
 	}

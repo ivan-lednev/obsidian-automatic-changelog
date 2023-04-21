@@ -23,6 +23,7 @@ const rawTemplates = {
 
 export default class RenderDiffPlugin extends Plugin {
 	async onload() {
+
 		this.registerMarkdownCodeBlockProcessor(
 			"show-diff",
 			this.diffProcessor
