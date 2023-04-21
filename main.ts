@@ -4,6 +4,7 @@ import {
 	parseYaml,
 	Plugin,
 	PluginSettingTab,
+	sanitizeHTMLToDom,
 	Setting,
 	stringifyYaml,
 } from "obsidian";
@@ -50,21 +51,23 @@ export default class RenderDiffPlugin extends Plugin {
 
 	onunload() {}
 
+	private getDiff() {}
+
 	diffProcessor = async (source: string, el: HTMLDivElement) => {
-		const config = parseYaml(source);
-		const { from, to } = config.dates || {};
-
-		const dateRange = `HEAD@{${from}}..HEAD@{${to}}`;
-
-		const { from: fromCommit, to: toCommit } = config.commits || {};
-
-		const commitRange = `${fromCommit}..${toCommit}`;
-
-		const baseDir = (
-			this.app.vault.adapter as FileSystemAdapter
-		).getBasePath();
-
 		try {
+			const config = parseYaml(source);
+			const { from, to } = config.dates || {};
+
+			const dateRange = `HEAD@{${from}}..HEAD@{${to}}`;
+
+			const { from: fromCommit, to: toCommit } = config.commits || {};
+
+			const commitRange = `${fromCommit}..${toCommit}`;
+
+			const baseDir = (
+				this.app.vault.adapter as FileSystemAdapter
+			).getBasePath();
+
 			const response = await simpleGit(baseDir).diff([
 				"--ignore-all-space",
 				config.dates ? dateRange : commitRange,
@@ -73,20 +76,23 @@ export default class RenderDiffPlugin extends Plugin {
 			]);
 
 			const parsedDiff = parse(response);
-			el.innerHTML = html(parsedDiff, {
-				drawFileList: false,
-				rawTemplates: {
-					"icon-file": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" x2="8" y1="13" y2="13"></line><line x1="16" x2="8" y1="17" y2="17"></line><line x1="10" x2="8" y1="9" y2="9"></line></svg>`,
-					"tag-file-added": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" x2="12" y1="18" y2="12"></line><line x1="9" x2="15" y1="15" y2="15"></line></svg>`,
-				},
+			const sanitizedHtml = sanitizeHTMLToDom(
+				html(parsedDiff, {
+					drawFileList: false,
+					rawTemplates: {
+						"icon-file": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" x2="8" y1="13" y2="13"></line><line x1="16" x2="8" y1="17" y2="17"></line><line x1="10" x2="8" y1="9" y2="9"></line></svg>`,
+						"tag-file-added": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" x2="12" y1="18" y2="12"></line><line x1="9" x2="15" y1="15" y2="15"></line></svg>`,
+					},
+				})
+			);
+
+			el.append(sanitizedHtml);
+		} catch (e) {
+			el.createEl("pre", {
+				text: `Error: ${e}`,
 			});
 
-			// new Diff2HtmlUI(el, response, {
-			// 	stickyFileHeaders: false,
-			// 	renderNothingWhenEmpty: true,
-			// }).draw();
-		} catch (e) {
-			el.setText(`Error: ${e.message}`);
+			throw e;
 		}
 	};
 
