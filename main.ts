@@ -8,7 +8,7 @@ import {
 	stringifyYaml,
 } from "obsidian";
 import { simpleGit } from "simple-git";
-import { Diff2HtmlUI } from "diff2html/lib-esm/ui/js/diff2html-ui";
+import { html, parse } from "diff2html";
 
 interface RenderDiffSettings {
 	mySetting: string;
@@ -72,10 +72,19 @@ export default class RenderDiffPlugin extends Plugin {
 				`:!${config.exclude}`,
 			]);
 
-			new Diff2HtmlUI(el, response, {
-				stickyFileHeaders: false,
-				renderNothingWhenEmpty: true,
-			}).draw();
+			const parsedDiff = parse(response);
+			el.innerHTML = html(parsedDiff, {
+				drawFileList: false,
+				rawTemplates: {
+					"icon-file": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" x2="8" y1="13" y2="13"></line><line x1="16" x2="8" y1="17" y2="17"></line><line x1="10" x2="8" y1="9" y2="9"></line></svg>`,
+					"tag-file-added": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-plus"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" x2="12" y1="18" y2="12"></line><line x1="9" x2="15" y1="15" y2="15"></line></svg>`,
+				},
+			});
+
+			// new Diff2HtmlUI(el, response, {
+			// 	stickyFileHeaders: false,
+			// 	renderNothingWhenEmpty: true,
+			// }).draw();
 		} catch (e) {
 			el.setText(`Error: ${e.message}`);
 		}
