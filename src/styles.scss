@@ -16,7 +16,7 @@
 	}
 }
 
-:not(#fake-id) .block-language-render-diff {
+:not(#fake-id) .block-language-show-diff {
 	@include meta.load-css("diff2html.min.css");
 	@include reset-obsidian-table-styles;
 
