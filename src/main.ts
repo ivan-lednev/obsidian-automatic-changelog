@@ -17,6 +17,8 @@ import lucideFilePlus from "../icons/lucide-file-plus.svg";
 const rawTemplates = {
 	"icon-file": lucideFileText,
 	"tag-file-added": lucideFilePlus,
+	// todo
+	"tag-file-changed": null,
 };
 
 export default class RenderDiffPlugin extends Plugin {
@@ -41,33 +43,28 @@ export default class RenderDiffPlugin extends Plugin {
 		return (this.app.vault.adapter as FileSystemAdapter).getBasePath();
 	}
 
-	private getDiff(source: string) {
-		const config = parseYaml(source);
+	private gitDiff(config: any) {
+		const args = [createRangeArg(config), "--", getExcludedPaths(config)];
 
-		return simpleGit(this.getBasePath()).diff([
-			createRangeArg(config),
-			"--",
-			getExcludedPaths(config),
-		]);
+		return simpleGit(this.getBasePath()).diff(args);
 	}
 
-	diffProcessor = async (source: string, el: HTMLDivElement) => {
+	diffProcessor = async (rawConfig: string, el: HTMLDivElement) => {
 		try {
-			const diff = await this.getDiff(source);
+			const config = parseYaml(rawConfig);
+			const diff = await this.gitDiff(config);
 
 			if (!diff.trim()) {
 				el.createEl("p", { text: "No changes" });
 			}
 
-			el.append(
-				sanitizeHTMLToDom(
-					html(parse(diff), { drawFileList: false, rawTemplates })
-				)
+			const fragment = sanitizeHTMLToDom(
+				html(parse(diff), { drawFileList: false, rawTemplates })
 			);
+
+			el.append(fragment);
 		} catch (e) {
-			el.createEl("pre", {
-				text: e,
-			});
+			el.createEl("pre", { text: e });
 		}
 	};
 }
