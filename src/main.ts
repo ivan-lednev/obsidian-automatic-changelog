@@ -4,13 +4,8 @@ import {
 	Plugin,
 	sanitizeHTMLToDom,
 } from "obsidian";
-import { simpleGit } from "simple-git";
 import { html, parse } from "diff2html";
-import {
-	createDailyDiffCodeBlock,
-	createRangeArg,
-	getExcludedPaths,
-} from "./utils";
+import { createDailyDiffCodeBlock, gitDiff } from "./utils";
 import lucideFileText from "../icons/lucide-file-text.svg";
 import lucideFilePlus from "../icons/lucide-file-plus.svg";
 
@@ -18,12 +13,11 @@ const rawTemplates = {
 	"icon-file": lucideFileText,
 	"tag-file-added": lucideFilePlus,
 	// todo
-	"tag-file-changed": null,
+	"tag-file-changed": "",
 };
 
 export default class RenderDiffPlugin extends Plugin {
 	async onload() {
-
 		this.registerMarkdownCodeBlockProcessor(
 			"show-diff",
 			this.diffProcessor
@@ -40,20 +34,18 @@ export default class RenderDiffPlugin extends Plugin {
 
 	onunload() {}
 
-	private getBasePath() {
+	private getVaultPath() {
 		return (this.app.vault.adapter as FileSystemAdapter).getBasePath();
-	}
-
-	private gitDiff(config: any) {
-		const args = [createRangeArg(config), "--", getExcludedPaths(config)];
-
-		return simpleGit(this.getBasePath()).diff(args);
 	}
 
 	diffProcessor = async (rawConfig: string, el: HTMLDivElement) => {
 		try {
-			const config = parseYaml(rawConfig);
-			const diff = await this.gitDiff(config);
+			const config = parseYaml(rawConfig) || {};
+			if (!config.path) {
+				config.path = this.getVaultPath();
+			}
+
+			const diff = await gitDiff(config);
 
 			if (!diff.trim()) {
 				el.createEl("p", { text: "No changes" });

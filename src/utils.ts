@@ -1,5 +1,6 @@
 import { moment, stringifyYaml } from "obsidian";
 import { isNotUndefined, isString } from "typed-assert";
+import { simpleGit } from "simple-git";
 
 function createDailyDiffConfig() {
 	return {
@@ -39,13 +40,7 @@ function excludePath(string: string) {
 	return `:(exclude)${string}`;
 }
 
-export function createRangeArg(config: any) {
-	if (!config) {
-		return getDefaultDateRange();
-	}
-
-	const { commits, dates } = config;
-
+export function createRevisionRange(commits?: any, dates?: any) {
 	if (commits) {
 		const { from, to } = commits;
 		isString(from, "Commits must have a `from` string property");
@@ -64,16 +59,20 @@ export function createRangeArg(config: any) {
 	return getDefaultDateRange();
 }
 
-export function getExcludedPaths(config: any) {
-	if (!config) {
-		return excludePath(".obsidian");
-	}
-
-	const { exclude } = config;
-
+export function createExcludedPaths(exclude: any) {
 	if (Array.isArray(exclude)) {
 		return exclude.map((path: string) => excludePath(path)).join(" ");
 	}
 
 	return excludePath(exclude);
 }
+
+export function gitDiff(config: any) {
+	const revisionRange = createRevisionRange(config.commits, config.dates);
+	const excludedPaths = createExcludedPaths(config.exclude || ".obsidian");
+
+	const args = [revisionRange, "--", excludedPaths];
+
+	return simpleGit(config.path).diff(args);
+}
+
