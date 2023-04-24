@@ -51,10 +51,10 @@ export default class RenderDiffPlugin extends Plugin {
 
 	diffProcessor = async (rawConfig: string, el: HTMLDivElement) => {
 		try {
-			const config = parseYaml(rawConfig) || {};
-			if (!config.path) {
-				config.path = this.getVaultPath();
-			}
+			const config = {
+				path: this.getVaultPath(),
+				...parseYaml(rawConfig),
+			};
 
 			const diff = await gitDiff(config);
 
