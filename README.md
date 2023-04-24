@@ -1,3 +1,5 @@
+🐞 [Create issues, feature requests, share your ideas](https://github.com/ivan-lednev/obsidian-automatic-changelog/issues)
+
 <!-- TOC -->
   * [Purpose](#purpose)
   * [Usage](#usage)
@@ -21,7 +23,7 @@ changelog, but you can point it to any repo in your file system.
 
 The plugin renders Markdown code blocks with the `show-diff` language tag.
 
-In the simplest use case, an empty code block will show unstaged changes:
+An empty code block will show a diff between today and yesterday:
 
 <pre>
 ```show-diff
