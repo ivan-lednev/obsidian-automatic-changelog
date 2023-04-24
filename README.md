@@ -22,9 +22,9 @@ changelog, but you can point it to any repo in your file system.
 
 ## Usage
 
-The plugin renders Markdown code blocks with the `show-diff` language tag.
+For the plugin to work on your vault, it should be a git repository. You can add automatic git backups to your vault with [obsidian-git](https://github.com/denolehov/obsidian-git).
 
-An empty code block will show a diff between today and yesterday:
+The plugin renders Markdown code blocks with the `show-diff` language tag. An empty code block will show a diff between today and yesterday:
 
 <pre>
 ```show-diff
