@@ -55,7 +55,7 @@ commits:
 
 ### `path`
 
-This defaults to obsidian, but you can point the plugin to any repository in your file system:
+This defaults to the vault you're in, but you can point the plugin to any repository in your file system:
 <pre>
 ```show-diff
 path: /path/to/my-pet-project
