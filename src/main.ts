@@ -6,14 +6,25 @@ import {
 } from "obsidian";
 import { html, parse } from "diff2html";
 import { createDailyDiffCodeBlock, gitDiff } from "./utils";
-import lucideFileText from "../icons/lucide-file-text.svg";
-import lucideFilePlus from "../icons/lucide-file-plus.svg";
+import fileText from "../icons/file-text.svg";
+import filePlus from "../icons/file-plus.svg";
+import fileDiff from "../icons/file-diff.svg";
+import fileRenamed from "../icons/file-signature.svg";
+import fileX from "../icons/file-x.svg";
+import plus from "../icons/plus.svg";
+import diff from "../icons/diff.svg";
+import trash from "../icons/trash-2.svg";
 
 const rawTemplates = {
-	"icon-file": lucideFileText,
-	"tag-file-added": lucideFilePlus,
-	// todo
-	"tag-file-changed": "",
+	"icon-file": fileText,
+	"icon-file-added": filePlus,
+	"icon-file-changed": fileDiff,
+	"icon-file-deleted": fileX,
+	"icon-file-renamed": fileRenamed,
+	"tag-file-added": plus,
+	"tag-file-changed": diff,
+	"tag-file-deleted": trash,
+	"tag-file-renamed": fileRenamed,
 };
 
 export default class RenderDiffPlugin extends Plugin {
