@@ -14,7 +14,8 @@
 
 ## Purpose
 
-This plugin lets you render Git diff output in your notes.
+This plugin lets you render Git diff output in your notes that looks like this:
+![](demo.png)
 
 I personally use it in a combo with obsidian-git to revise what I've been working on a given day, like an automatic
 changelog, but you can point it to any repo in your file system.
